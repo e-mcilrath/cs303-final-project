@@ -2,11 +2,11 @@ Github URL : https://github.com/e-mcilrath/cs303-final-project.git
 
 40-point milestone rubric: 
 
-- Study html to get some experience with making websites (10 points)
+- Study html to get some experience with making websites (5 points)
 - create a small project that would replicate what our final website would work like (5 points)
-- work collaberatively with eric to design the back end of the website with c++ (15 points)
+- work collaberatively with eric to design the back end of the website with c++ (10 points)
 - using my experience with html find a way to create a website that can use our c++ program to create
-a map of UTK
+a map of UTK (20)
 
 
  -- Time Log --  -- Description -- 
@@ -15,7 +15,7 @@ a map of UTK
     ~ 2 hour    | (in progress) I have not been able to complete this yet, but by thursday I plan on using online resources 
  _______________| like Dr. Emrich advised me to try and teach myself HTML 
 
-    ~2 hour     | Using what I learned about HTML me and Eric discussed trying to make a replica website of what our final website would be.
+    ~2 hour     | (in progress) Using what I learned about HTML me and Eric discussed trying to make a replica website of what our final website would be.
 ________________| I will have this linked to our git ripository so that you can look at the project. 
 
 
