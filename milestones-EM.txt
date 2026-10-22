@@ -75,11 +75,9 @@ and maybe use Google for a handful of comparison routes if it's not a pain.
 3. PROGRESS SUMMARY
 ==================================================================
 
-[Fill in before submitting. Things to mention:]
-  - [what got done in lab]
-  - [what got done outside lab]
-  - [code contribution: file names + commit]
-  - [any data research / test queries run]
+
+- In lab, I started the code on graph.cpp and graph.h.
+- Outside of lab, I finished the code, did the research on the campus road network sources.
 
 
 ==================================================================
@@ -90,7 +88,7 @@ Task: Graph data structure + edge list loader (Milestone 1, task 1.2)
 
   Files:   src/graph.h, src/graph.cpp, src/graph_test.cpp, Makefile,
            data/test_small.txt
-  Commit:  [commit hash + link]
+  Commit:  https://github.com/e-mcilrath/cs303-final-project/commit/bd073ba38cc7d676ec224e1c81319947363a9d85
   Branch:  main
 
   How to build/run:
@@ -145,14 +143,11 @@ What's left:
 
 Date        | Hours | What I worked on
 ------------|-------|---------------------------------------------------
-            |       |
-            |       |
-            |       |
-            |       |
-            |       |
-            |       |
+10/19       |   1   |  src/{graph.cpp,graph.h,graph_test.cpp}
+10/20       |   1   |  research on the campus road network sources
+10/22       |   2   |  milestones-EM.txt, Dijkstra's with Abe
 ------------|-------|---------------------------------------------------
-Total:      |       | (goal: ~1 hr lab + ~4 hrs outside = ~5 hrs)
+Total:      |   4   | 
 
 
 ==================================================================
