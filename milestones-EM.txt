@@ -116,8 +116,8 @@ Task: Graph data structure + edge list loader (Milestone 1, task 1.2)
 ==================================================================
 
 What went well:
-  [fill in]
-
+  - The campus route source looks promising.
+  
 What changed:
   - After the professor's feedback we shifted more of the work onto the
     C++ backend and decided the website should stay really minimal.
