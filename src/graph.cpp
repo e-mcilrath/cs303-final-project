@@ -144,6 +144,7 @@ void Graph::read(istream &in)
     istringstream ss(line);
     if (!(ss >> type)) continue;   // blank line
 
+    // AI helped here
     if (type == "NODE") {
       if (!(ss >> s_id >> s_lat >> s_lon)) bad_line(line_num, "NODE needs: id lat lon");
       if (ss >> extra) bad_line(line_num, "extra stuff at the end of NODE line");
