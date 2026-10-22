@@ -1,0 +1,40 @@
+# Small hand-made test graph. The layout is made up (not real campus data),
+# it's just here to test loading and printing before we have the OSM data.
+#
+# Lengths are meters, capacity is vehicles/hour, free flow time is seconds
+# (length / speed limit, 25 mph is about 11.2 m/s).
+#
+#      1 ---- 2 ---- 3
+#      |      |      |
+#      4 ---- 5 ---> 6      (5 -> 6 is one way)
+
+NODE 1 35.95600 -83.93400
+NODE 2 35.95600 -83.93000
+NODE 3 35.95600 -83.92600
+NODE 4 35.95300 -83.93400
+NODE 5 35.95300 -83.93000
+NODE 6 35.95300 -83.92600
+
+# top road, two way
+EDGE 1 2 360 1200 32.1 North Ave
+EDGE 2 1 360 1200 32.1 North Ave
+EDGE 2 3 360 1200 32.1 North Ave
+EDGE 3 2 360 1200 32.1 North Ave
+
+# bottom road, 5 -> 6 is one way
+EDGE 4 5 360 800 32.1 South St
+EDGE 5 4 360 800 32.1 South St
+EDGE 5 6 360 800 32.1 South St
+
+# cross streets, two way
+EDGE 1 4 335 600 29.9 West Dr
+EDGE 4 1 335 600 29.9 West Dr
+EDGE 2 5 335 600 29.9 Middle Way
+EDGE 5 2 335 600 29.9 Middle Way
+EDGE 3 6 335 600 29.9 East Dr
+EDGE 6 3 335 600 29.9 East Dr
+
+BUILDING 2 Library
+BUILDING 5 Engineering Building
+BUILDING 5 Parking Garage
+BUILDING 6 Stadium

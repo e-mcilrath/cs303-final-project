@@ -1,0 +1,215 @@
+CS303 - Challenge 06: Final Project Milestones and Early Progress
+Eric McIlrath (EM)
+Team: Eric McIlrath, Abraham Rashdan
+Project: UTK Campus Traffic-Aware Route Planner
+
+Shared repo: https://github.com/e-mcilrath/cs303-final-project
+
+==================================================================
+1. PROJECT OVERVIEW (quick recap)
+==================================================================
+
+We're building an interactive map of the UT campus that gives directions
+between any two points while taking traffic into account. The backend is
+all C++: the road network is a weighted directed graph stored as adjacency
+lists, where intersections are nodes and road segments are edges. Each edge
+has a length, capacity, free-flow travel time, and current congestion. Each
+node also stores a list of buildings located there. Routing uses Dijkstra's
+algorithm, and the user can tell it to avoid certain roads. The program
+outputs the route, congestion along it, and estimated travel time.
+
+The website is just a simple frontend (campus map, roads colored by
+congestion, pick a start/end). It is NOT where the bulk of the work is.
+
+How we split it up (subject to change):
+  - Eric: getting the real map data and turning it into our graph,
+    the graph data structure itself, and the traffic/congestion simulation.
+  - Abraham: Dijkstra + routing, road closures / avoided roads, turn by
+    turn direction output, and hooking the backend up to the website.
+
+Feedback from Dr. Emrich:
+  - Getting the seed data is not trivial, so I need to actually research
+    the options and not assume it'll be easy. That's why data acquisition
+    is a big chunk of my rubric below.
+  - Since we're already implementing Dijkstra's for the next class project,
+    Dijkstra alone isn't enough work, and leaning on AI for the website
+    would make the effort level too low. So we moved more hand-written C++
+    onto the backend (data pipeline, traffic model, testing) and are
+    keeping the website as small as possible.
+
+
+==================================================================
+2. DATA SOURCE RESEARCH (what I found so far)
+==================================================================
+
+Options I looked at for getting the campus road network:
+
+  a) OpenStreetMap (OSM) through the Overpass API
+     - Free. Roads are "ways" tagged with key=highway, and you can query
+       everything inside a lat/lon bounding box (south, west, north, east).
+     - You can test queries in overpass-turbo before writing any code.
+     - Gives node coordinates, which lets me compute edge lengths, and
+       tags like oneway, which matters since our graph is directed.
+     - Data is licensed under the ODbL, so we have to credit OpenStreetMap
+       on the map (https://www.openstreetmap.org/copyright).
+     - Downside: no traffic data at all, and no capacity numbers, so I'll
+       have to estimate capacity from road type (e.g. primary vs.
+       residential vs. service road).
+
+  b) Google Maps Platform (Routes API etc.)
+     - Has real traffic-aware travel times, which is cool.
+     - But it costs money past the free tier, needs an API key, and
+       Google's terms limit how long you can cache/store their content,
+       so building our whole graph out of it seems like a bad idea.
+     - Might still be useful as a sanity check (compare our estimated
+       travel times against Google's for a few routes).
+
+  c) Hand-entering roads from the UT campus map
+     - Most control but super tedious and error prone. Backup plan only.
+
+Current plan: use OSM for the road network, simulate traffic ourselves,
+and maybe use Google for a handful of comparison routes if it's not a pain.
+
+
+==================================================================
+3. PROGRESS SUMMARY
+==================================================================
+
+[Fill in before submitting. Things to mention:]
+  - [what got done in lab]
+  - [what got done outside lab]
+  - [code contribution: file names + commit]
+  - [any data research / test queries run]
+
+
+==================================================================
+4. INDIVIDUAL CODE CONTRIBUTION
+==================================================================
+
+Task: Graph data structure + edge list loader (Milestone 1, task 1.2)
+
+  Files:   src/graph.h, src/graph.cpp, src/graph_test.cpp, Makefile,
+           data/test_small.txt
+  Commit:  [commit hash + link]
+  Branch:  main
+
+  How to build/run:
+    make
+    ./bin/graph_test data/test_small.txt
+
+  What it does:
+    Node, Edge, and Graph classes. Each Node has an id, lat/lon, a list of
+    buildings, and its outgoing edges (adjacency list). Each Edge has the
+    destination, length, capacity, free flow time, current volume, and
+    road name, and congestion() gives volume / capacity. Graph::read()
+    loads our text format (NODE / EDGE / BUILDING lines) and stops with
+    the line number if something in the file is bad (unknown node,
+    duplicate id, non-number, length <= 0, etc). graph_test loads a small
+    hand-made 6 node test graph (with a one way road) and prints each node
+    with its edges.
+
+    Node ids are long long because OSM ids are too big for an int, and the
+    graph keeps a map from id to index so the OSM converter in milestone 2
+    can use the real ids directly.
+
+
+==================================================================
+5. REFLECTION AND NEXT STEPS
+==================================================================
+
+What went well:
+  [fill in]
+
+What changed:
+  - After the professor's feedback we shifted more of the work onto the
+    C++ backend and decided the website should stay really minimal.
+  - Data acquisition went from "we'll just grab a map" to its own set of
+    tasks once I realized how much cleanup the raw data needs.
+
+Challenges / things I'm worried about:
+  - OSM gives roads but not traffic. Our traffic numbers will be
+    simulated, so I need to come up with a model that's believable without
+    any real campus traffic counts. 
+  - Raw OSM ways don't map 1 to 1 onto our graph. A way can pass through a
+    bunch of intersections, so I'll have to split ways at shared nodes to
+    get actual edges.
+  - Figuring out which buildings attach to which node.
+
+What's left:
+  - Everything in Milestones 2 and 3 below.
+
+
+==================================================================
+6. TIME LOG
+==================================================================
+
+Date        | Hours | What I worked on
+------------|-------|---------------------------------------------------
+            |       |
+            |       |
+            |       |
+            |       |
+            |       |
+            |       |
+------------|-------|---------------------------------------------------
+Total:      |       | (goal: ~1 hr lab + ~4 hrs outside = ~5 hrs)
+
+
+==================================================================
+7. MILESTONE RUBRIC (40 points total, Eric's tasks)
+==================================================================
+
+----------------------------------------
+Milestone 1 - Challenge 06 lab (week of Oct 19)          8 pts
+----------------------------------------
+  1.1  Research data sources (OSM/Overpass vs Google vs manual), pick
+       one, and get a working Overpass query that returns the roads
+       around campus. Save the query in the repo.                     3
+  1.2  Node/Edge/Graph classes in C++ using adjacency lists. Nodes have
+       an id, lat/lon, and a list of buildings. Edges have a
+       destination, length, capacity, free-flow time, and congestion.
+       Loads a small hand-made test graph from a text file and prints
+       it. Compiles with the Makefile.                                5
+
+----------------------------------------
+Milestone 2 - (early November)                           16 pts
+----------------------------------------
+  2.1  Export the campus road data from OSM and write a C++ converter
+       that turns it into our edge list format: split ways at shared
+       intersection nodes, compute edge lengths from lat/lon
+       (haversine), and make two edges for two-way roads / one edge
+       for one-way roads.                                             6
+  2.2  Estimate capacity and free-flow travel time for each edge based
+       on road type and speed limit (use the maxspeed tag when it
+       exists, otherwise a default per road type).                    3
+  2.3  Map campus buildings to their nearest intersection node and
+       store them in the node's building list, so users can search by
+       building name instead of node id.                              4
+  2.4  Validation checks on the converted graph: no duplicate edges,
+       no zero length edges, every node reachable, and print a
+       summary (node count, edge count, any isolated pieces).         3
+
+----------------------------------------
+Milestone 3 - Final submission                           16 pts
+----------------------------------------
+  3.1  Traffic simulation: assign traffic volume to edges based on time
+       of day (heavier around class changes and rush hour) and compute
+       congested travel time with a volume/capacity model (BPR style:
+       t = t0 * (1 + 0.15 * (v/c)^4)). Edge weights update so
+       Dijkstra picks up the new times.                               7
+  3.2  Classify each edge's congestion level (none / yellow / orange /
+       red) using v/c thresholds, and export the graph + congestion
+       levels in a format the website can read (probably JSON).       3
+  3.3  Testing: small test graphs with known shortest paths and
+       congestion values, plus comparing a few of our estimated travel
+       times against Google Maps to see if they're in the right
+       ballpark.                                                      3
+  3.4  Documentation: README section on how to get/rebuild the map
+       data, how the traffic model works, and my part of the final
+       report (including OSM attribution).                            3
+
+  Milestone 1:   8
+  Milestone 2:  16
+  Milestone 3:  16
+  -----------------
+  Total:        40
