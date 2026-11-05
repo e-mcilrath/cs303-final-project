@@ -36,7 +36,8 @@ EDGE 5 2 335 600 29.9 CW Middle Way
 EDGE 3 6 335 600 29.9 CW East Dr
 EDGE 6 3 335 600 29.9 CW East Dr
 
-BUILDING 2 Library
-BUILDING 5 Engineering Building
-BUILDING 5 Parking Garage
-BUILDING 6 Stadium
+# buildings are a name at the building's center, not tied to a node
+BUILDING 35.95640 -83.93000 Library
+BUILDING 35.95270 -83.92960 Engineering Building
+BUILDING 35.95270 -83.93050 Parking Garage
+BUILDING 35.95250 -83.92550 Stadium

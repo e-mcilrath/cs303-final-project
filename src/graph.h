@@ -10,6 +10,10 @@ Each edge says who can use it: cars, walkers, or both. A one-way road is a
 car+walk edge one way and a walk-only edge back, since people can walk
 either direction on it.
 
+Buildings are kept in their own list with a name and a location. They are
+not tied to nodes; routing code finds the nearest node to a building when
+it needs one.
+
 Units: length in meters, capacity in vehicles per hour, free flow time in
 seconds, volume in vehicles per hour. Walk-only edges have capacity and
 free flow time 0, since they carry no cars.
@@ -43,8 +47,14 @@ class Node {
     long long id;         // long long because OSM node ids get really big
     double lat;
     double lon;
-    vector <string> buildings;
     vector <Edge> adj;    // outgoing edges
+};
+
+class Building {
+  public:
+    string name;
+    double lat;           // center of the building
+    double lon;
 };
 
 class Graph {
@@ -61,12 +71,13 @@ class Graph {
        both to be 0. At least one of car / walk has to be true. */
     void add_edge(int from, int to, double length, double capacity,
                   double free_flow, bool car, bool walk, const string &name);
-    void add_building(int node, const string &building);
+    void add_building(const string &name, double lat, double lon);
 
     int num_edges() const;
     void print() const;
 
     vector <Node> nodes;
+    vector <Building> buildings;
 
   protected:
     map <long long, int> index;   // node id -> index in nodes

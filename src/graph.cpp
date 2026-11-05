@@ -8,15 +8,18 @@ the line (building names like "Greenhouse #14" have them).
 
   NODE id lat lon
   EDGE from_id to_id length capacity free_flow mode [road name]
-  BUILDING node_id building name
+  BUILDING lat lon building name
 
 mode says who can use the edge: C (cars only), W (walkers only) or CW (both).
 Edges with C need capacity > 0 and free_flow > 0. Walk-only (W) edges carry
 no cars, so their capacity and free_flow must be 0.
 
-Nodes have to be defined before an EDGE or BUILDING line uses them. Edges are
-directed, so a two-way road needs two EDGE lines. A one-way road is a CW edge
-in the legal direction plus a W edge back, since people can walk both ways.
+Nodes have to be defined before an EDGE line uses them. Edges are directed,
+so a two-way road needs two EDGE lines. A one-way road is a CW edge in the
+legal direction plus a W edge back, since people can walk both ways.
+
+A BUILDING is just a name at a location (the building's center). It isn't
+attached to any node, so BUILDING lines can go anywhere in the file.
 */
 
 #include <cerrno>
@@ -132,12 +135,18 @@ void Graph::add_edge(int from, int to, double length, double capacity,
   nodes[from].adj.push_back(e);
 }
 
-void Graph::add_building(int node, const string &building)
+void Graph::add_building(const string &name, double lat, double lon)
 {
-  if (node < 0 || node >= (int) nodes.size()) {
-    throw runtime_error("add_building: node index out of range");
-  }
-  nodes[node].buildings.push_back(building);
+  Building b;
+
+  if (name.empty()) throw runtime_error("add_building: building has no name");
+  if (!(lat >= -90 && lat <= 90)) throw runtime_error("add_building: bad latitude");
+  if (!(lon >= -180 && lon <= 180)) throw runtime_error("add_building: bad longitude");
+
+  b.name = name;
+  b.lat = lat;
+  b.lon = lon;
+  buildings.push_back(b);
 }
 
 void Graph::read(istream &in)
@@ -212,13 +221,16 @@ void Graph::read(istream &in)
       add_edge(from, to, length, capacity, free_flow, car, walk, rest_of_line(ss));
 
     } else if (type == "BUILDING") {
-      if (!(ss >> s_id)) bad_line(line_num, "BUILDING needs: node_id name");
-      if (!to_id(s_id, id)) bad_line(line_num, "bad node id \"" + s_id + "\"");
-      from = find_node(id);
-      if (from == -1) bad_line(line_num, "building uses unknown node " + s_id);
+      if (!(ss >> s_lat >> s_lon)) bad_line(line_num, "BUILDING needs: lat lon name");
+      if (!to_double(s_lat, lat) || !(lat >= -90 && lat <= 90)) {
+        bad_line(line_num, "bad latitude \"" + s_lat + "\"");
+      }
+      if (!to_double(s_lon, lon) || !(lon >= -180 && lon <= 180)) {
+        bad_line(line_num, "bad longitude \"" + s_lon + "\"");
+      }
       extra = rest_of_line(ss);
       if (extra.empty()) bad_line(line_num, "BUILDING is missing a name");
-      add_building(from, extra);
+      add_building(extra, lat, lon);
 
     } else {
       bad_line(line_num, "unknown line type \"" + type + "\"");
@@ -248,10 +260,6 @@ void Graph::print() const
     n = &nodes[i];
     printf("Node %lld (%.5f, %.5f)\n", n->id, n->lat, n->lon);
 
-    for (j = 0; j < n->buildings.size(); j++) {
-      printf("  building: %s\n", n->buildings[j].c_str());
-    }
-
     if (n->adj.empty()) printf("  (no outgoing edges)\n");
     for (j = 0; j < n->adj.size(); j++) {
       e = &n->adj[j];
@@ -264,5 +272,11 @@ void Graph::print() const
       }
       printf("\n");
     }
+  }
+
+  if (!buildings.empty()) printf("\nBuildings:\n");
+  for (i = 0; i < buildings.size(); i++) {
+    printf("  %-30s (%.5f, %.5f)\n", buildings[i].name.c_str(),
+           buildings[i].lat, buildings[i].lon);
   }
 }

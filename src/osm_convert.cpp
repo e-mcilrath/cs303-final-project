@@ -124,11 +124,18 @@ class OutEdge {
     string name;
 };
 
+class OutBuilding {
+  public:
+    string name;
+    double lat;                     // center of the building
+    double lon;
+};
+
 class OutGraph {
   public:
-    set <long long> nodes;                       // graph node ids
+    set <long long> nodes;          // graph node ids
     vector <OutEdge> edges;
-    vector < pair <long long, string> > buildings;   // node id, building name
+    vector <OutBuilding> buildings; // not tied to nodes
 };
 
 /* ------------------------------------------------------------------ */
@@ -412,17 +419,21 @@ static void add_plaza_edges(const vector <Plaza> &plazas, const vector <Line> &l
 /* Step 7: buildings (rubric 2.3)                                      */
 /* ------------------------------------------------------------------ */
 
-/* TODO:
-   - Ways with a "building" tag AND a "name" tag, that touch campus.
+/* Buildings are their own list (name + center), NOT attached to nodes. The
+   routing code finds the nearest node to a building when it needs one.
+
+   TODO:
+   - Ways with a "building" tag AND a "name" tag, that touch campus
+     (about 112 different names).
    - Center = average lat/lon of the outline points (skip the repeated
      last point of a closed way).
-   - Attach to the nearest graph node that has a walk edge (a simple loop
-     over ~2,500 nodes is fine). Using car-only nodes would drop people
-     on a road.
-   - Some names repeat (e.g. one building split into several outlines),
-     only add a name to a node once. */
-static void attach_buildings(const OsmData &osm, const vector < vector <long long> > &campus,
-                             OutGraph &g)
+   - OSM sometimes packs two names into one value with ";" (e.g. "Berry
+     Hall;Thompson-Boling Assembly Center and Arena"). Split it and add
+     each name with the same center.
+   - Some names repeat (one building split into several outlines). Keep one
+     entry per name: average all of its outline points into one center. */
+static void collect_buildings(const OsmData &osm, const vector < vector <long long> > &campus,
+                              OutGraph &g)
 {
   (void) osm; (void) campus; (void) g;
 }
@@ -440,7 +451,8 @@ static void attach_buildings(const OsmData &osm, const vector < vector <long lon
      a strongly connected component (or BFS forward + BFS on reversed
      edges from one big node, keep nodes in both). Expect about 66
      car-only nodes to fall off (parking lot stubs off Neyland Drive).
-   - Removing nodes means removing their edges and buildings too.
+   - Removing nodes means removing their edges too. Buildings aren't tied
+     to nodes, so they stay.
    - Print a summary to stderr: node count, edge counts (car / walk /
      plaza), pieces found and how big each was. */
 static void check_graph(OutGraph &g)
@@ -456,15 +468,13 @@ static void check_graph(OutGraph &g)
    - NODE lines first (graph.cpp needs nodes defined before edges), then
      EDGE lines, then BUILDING lines. Use %.7f for lat/lon (OSM's own
      precision) and %.1f or so for length/time.
+   - BUILDING lines are  BUILDING lat lon name  (the building's center).
    - Put a header comment in the file: where it came from, the date, and
      "Map data (c) OpenStreetMap contributors, ODbL".
    - EDGE lines carry a mode before the name (Graph::read checks it):
        EDGE from to length capacity free_flow C|W|CW [name]
      W edges must have capacity 0 and free_flow 0, C/CW edges need both
-     > 0. data/example_campus.txt shows every case.
-   - BUILDING names: OSM sometimes packs two names into one value with
-     ";" (e.g. "Berry Hall;Thompson-Boling Assembly Center and Arena").
-     Write one BUILDING line per name. */
+     > 0. data/example_campus.txt shows every case. */
 static void write_graph(ostream &out, const OutGraph &g, const OsmData &osm)
 {
   (void) out; (void) g; (void) osm;
@@ -514,7 +524,7 @@ int main(int argc, char **argv)
     find_graph_nodes(lines, g);                                 // step 6
     split_lines(lines, osm, g);
     add_plaza_edges(plazas, lines, osm, g);
-    attach_buildings(osm, campus, g);                           // step 7
+    collect_buildings(osm, campus, g);                          // step 7
     check_graph(g);                                             // step 8
   } catch (const runtime_error &e) {
     fprintf(stderr, "%s: %s\n", argv[1], e.what());

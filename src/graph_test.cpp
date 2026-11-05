@@ -3,7 +3,8 @@ Eric McIlrath
 graph_test.cpp
 
 Reads a graph file, builds the adjacency lists, and prints every node with
-its outgoing edges so I can check the graph got loaded right.
+its outgoing edges, then the buildings, so I can check the graph got loaded
+right.
 
 usage: graph_test graph-file
 */
@@ -40,6 +41,7 @@ int main(int argc, char **argv)
   }
 
   g.print();
-  printf("\n%d nodes, %d edges\n", (int) g.nodes.size(), g.num_edges());
+  printf("\n%d nodes, %d edges, %d buildings\n", (int) g.nodes.size(), g.num_edges(),
+         (int) g.buildings.size());
   return 0;
 }

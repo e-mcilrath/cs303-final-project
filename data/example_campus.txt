@@ -1,14 +1,14 @@
 # Example campus-style graph for testing routing (Dijkstra) before the real
 # UTK graph is ready. Made-up layout and names, not real campus data, but it
 # uses every feature of the real file: big OSM-style node ids, car + walk
-# edges (CW), walk-only paths (W), a one-way road, unnamed paths, two
-# buildings on one node, a building only reachable on foot, and a # inside a
-# building name.
+# edges (CW), walk-only paths (W), a one-way road, unnamed paths, buildings
+# as separate points (not tied to nodes), a building whose nearest node only
+# has walk edges, and a # inside a building name.
 #
 # Format (see src/graph.cpp):
 #   NODE id lat lon
 #   EDGE from_id to_id length_m capacity_veh_per_hr free_flow_s mode [name]
-#   BUILDING node_id name
+#   BUILDING lat lon name
 # mode: C = cars only, W = walkers only, CW = both. W edges have capacity 0
 # and free_flow 0. Every EDGE line is one direction.
 #
@@ -37,7 +37,7 @@
 # walking searches use length (meters). Each answer is the unique best path
 # (no ties).
 #
-#   Car, Stadium (I) to Student Union (B):
+#   Car, I to B:
 #       I -> J -> F -> B
 #       9000000009 9000000010 9000000006 9000000002
 #       30.2 s
@@ -53,11 +53,11 @@
 #       B -> F -> J
 #       9000000002 9000000006 9000000010
 #       230.8 m
-#   Walk, Student Union (B) to Library (M):
+#   Walk, B to M:
 #       B -> F -> G -> M
 #       9000000002 9000000006 9000000007 9000000013
 #       348.7 m
-#   Car, I to Library (M): M only has walk edges:
+#   Car, I to M (M only has walk edges):
 #       no path
 #   Walk, J to C (cuts across on the footway and Pedestrian Mall):
 #       J -> F -> G -> C
@@ -67,10 +67,20 @@
 #       J -> F -> B -> C
 #       9000000010 9000000006 9000000002 9000000003
 #       35.8 s
-#   Walk, E to Art Museum (H) (unnamed footways past the Library):
+#   Walk, E to H (unnamed footways through M):
 #       E -> F -> G -> M -> H
 #       9000000005 9000000006 9000000007 9000000013 9000000008
 #       458.2 m
+#
+# Buildings and their nearest nodes (straight-line distance). A car trip
+# should start/end at the nearest node that has a car edge:
+#
+#   Student Union      nearest node B (32 m), nearest car node B (32 m)
+#   Stadium            nearest node I (57 m), nearest car node I (57 m)
+#   Engineering Hall   nearest node K (43 m), nearest car node K (43 m)
+#   Parking Garage #2  nearest node K (45 m), nearest car node K (45 m)
+#   Library            nearest node M (22 m), nearest car node C (64 m)
+#   Art Museum         nearest node H (32 m), nearest car node H (32 m)
 #
 # Map data: made up for testing.
 
@@ -144,9 +154,9 @@ EDGE 9000000013 9000000007 83.2 0 0 W
 EDGE 9000000013 9000000008 84.8 0 0 W
 EDGE 9000000008 9000000013 84.8 0 0 W
 
-BUILDING 9000000002 Student Union
-BUILDING 9000000009 Stadium
-BUILDING 9000000011 Engineering Hall
-BUILDING 9000000011 Parking Garage #2
-BUILDING 9000000013 Library
-BUILDING 9000000008 Art Museum
+BUILDING 35.9553562 -83.9285558 Student Union
+BUILDING 35.9526852 -83.9304999 Stadium
+BUILDING 35.9526403 -83.9262783 Engineering Hall
+BUILDING 35.9526223 -83.9268338 Parking Garage #2
+BUILDING 35.9546637 -83.9261116 Library
+BUILDING 35.9539713 -83.9249785 Art Museum
