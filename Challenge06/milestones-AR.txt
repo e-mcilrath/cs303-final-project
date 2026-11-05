@@ -1,0 +1,33 @@
+Github URL : https://github.com/e-mcilrath/cs303-final-project.git
+
+40-point milestone rubric: 
+
+- Study html to get some experience with making websites (5 points)
+- create a small project that would replicate what our final website would work like (5 points)
+- work collaberatively with eric to design the back end of the website with c++ (10 points)
+- using my experience with html find a way to create a website that can use our c++ program to create
+a map of UTK (20)
+
+
+ -- Time Log --  -- Description -- 
+    ~ 1 hour    | Me an Eric met last week to discuss our project and personal responsibilities regarding it
+   
+    ~ 2 hour    |  I have not been able to complete this yet, but by thursday I plan on using online resources 
+ _______________| like Dr. Emrich advised me to try and teach myself HTML 
+
+    ~2 hour     |  Using what I learned about HTML me and Eric discussed trying to make a replica website of what our final website would be.
+________________| I will have this linked to our git ripository so that you can look at the project. 
+
+
+
+Reflection: 
+
+Me and Eric have met together and devised a plan on what we want to create for our final project, but we have not been able 
+to commit a significant amount of our time to working on said project just yet. I am working on getting throught the project 4 for CS303
+which should help familirilize us with Djkstra's algorithim. This is significant because our project will use this algorithim to find the shoretest
+path between two locations on UTK. I will make sure not to include this in our time log as instructed by Dr. Emrich. My next step is to just work on 
+a replica website using HTML and uploading a compatible code to the git ripository. I have started to learn how to use HTML in combination with CSS and 
+javascript to create a website, but I have not been able to build a significant website just yet. I started a small project that uses the basics of html and 
+css to create a mini website with a working button. This can be found inside tester_website.html.
+
+
