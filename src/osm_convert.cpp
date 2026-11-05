@@ -379,8 +379,9 @@ static void find_graph_nodes(const vector <Line> &lines, OutGraph &g)
    - One-way line: forward edge gets car = true; the backward edge still
      exists for walkers (car = false, walk = line.walk). Drop it if the
      line isn't walkable.
-   - free_flow = length / speed for car edges. Walk-only edges have no car
-     time; decide what free_flow means for them (see write_graph). */
+   - free_flow = length / speed for car edges. Walk-only edges get
+     capacity 0 and free_flow 0 (Graph::read requires it); walking time
+     is worked out by the routing code from length. */
 static void split_lines(const vector <Line> &lines, const OsmData &osm, OutGraph &g)
 {
   (void) lines; (void) osm; (void) g;
@@ -457,13 +458,13 @@ static void check_graph(OutGraph &g)
      precision) and %.1f or so for length/time.
    - Put a header comment in the file: where it came from, the date, and
      "Map data (c) OpenStreetMap contributors, ODbL".
-   - DECISION NEEDED: our format has no way to say car vs walk yet, and
-     add_edge() rejects capacity 0. One clean option is a mode token
-     before the name:
+   - EDGE lines carry a mode before the name (Graph::read checks it):
        EDGE from to length capacity free_flow C|W|CW [name]
-     and give Edge two bools (car, walk). Graph::read and add_edge have to
-     change to match, and Abraham's Dijkstra needs to skip edges the
-     chosen mode can't use. Agree on it with him before writing this. */
+     W edges must have capacity 0 and free_flow 0, C/CW edges need both
+     > 0. data/example_campus.txt shows every case.
+   - BUILDING names: OSM sometimes packs two names into one value with
+     ";" (e.g. "Berry Hall;Thompson-Boling Assembly Center and Arena").
+     Write one BUILDING line per name. */
 static void write_graph(ostream &out, const OutGraph &g, const OsmData &osm)
 {
   (void) out; (void) g; (void) osm;
