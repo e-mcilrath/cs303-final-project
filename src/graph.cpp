@@ -2,15 +2,24 @@
 Eric McIlrath
 graph.cpp
 
-Graph file format, one thing per line. Anything after a # is a comment and
-blank lines are skipped.
+Graph file format, one thing per line. Lines whose first non-space character
+is # are comments, and blank lines are skipped. A # anywhere else is part of
+the line (building names like "Greenhouse #14" have them).
 
   NODE id lat lon
-  EDGE from_id to_id length capacity free_flow [road name]
-  BUILDING node_id building name
+  EDGE from_id to_id length capacity free_flow mode [road name]
+  BUILDING lat lon building name
 
-Nodes have to be defined before an EDGE or BUILDING line uses them. Edges are
-directed, so a two-way road needs two EDGE lines.
+mode says who can use the edge: C (cars only), W (walkers only) or CW (both).
+Edges with C need capacity > 0 and free_flow > 0. Walk-only (W) edges carry
+no cars, so their capacity and free_flow must be 0.
+
+Nodes have to be defined before an EDGE line uses them. Edges are directed,
+so a two-way road needs two EDGE lines. A one-way road is a CW edge in the
+legal direction plus a W edge back, since people can walk both ways.
+
+A BUILDING is just a name at a location (the building's center). It isn't
+attached to any node, so BUILDING lines can go anywhere in the file.
 */
 
 #include <cerrno>
@@ -25,11 +34,12 @@ using namespace std;
 
 double Edge::congestion() const
 {
+  if (!car) return 0;    // walk-only edges have capacity 0 and no traffic
   return volume / capacity;
 }
 
 /* Throws an error that says which line of the file was bad. */
-static void bad_line(int line_num, const string &msg)
+[[noreturn]] static void bad_line(int line_num, const string &msg)
 {
   throw runtime_error("line " + to_string(line_num) + ": " + msg);
 }
@@ -94,7 +104,7 @@ int Graph::add_node(long long id, double lat, double lon)
 }
 
 void Graph::add_edge(int from, int to, double length, double capacity,
-                     double free_flow, const string &name)
+                     double free_flow, bool car, bool walk, const string &name)
 {
   Edge e;
 
@@ -102,47 +112,59 @@ void Graph::add_edge(int from, int to, double length, double capacity,
     throw runtime_error("add_edge: node index out of range");
   }
   if (from == to) throw runtime_error("add_edge: edge goes from a node to itself");
+  if (!car && !walk) throw runtime_error("add_edge: edge has to allow cars or walkers");
 
   /* Written as !(x > 0) so NaN gets caught too. */
   if (!(length > 0)) throw runtime_error("add_edge: length must be > 0");
-  if (!(capacity > 0)) throw runtime_error("add_edge: capacity must be > 0");
-  if (!(free_flow > 0)) throw runtime_error("add_edge: free flow time must be > 0");
+  if (car) {
+    if (!(capacity > 0)) throw runtime_error("add_edge: capacity must be > 0 on a car edge");
+    if (!(free_flow > 0)) throw runtime_error("add_edge: free flow time must be > 0 on a car edge");
+  } else {
+    if (capacity != 0) throw runtime_error("add_edge: capacity must be 0 on a walk-only edge");
+    if (free_flow != 0) throw runtime_error("add_edge: free flow time must be 0 on a walk-only edge");
+  }
 
   e.to = to;
   e.length = length;
   e.capacity = capacity;
   e.free_flow = free_flow;
   e.volume = 0;
+  e.car = car;
+  e.walk = walk;
   e.name = name;
   nodes[from].adj.push_back(e);
 }
 
-void Graph::add_building(int node, const string &building)
+void Graph::add_building(const string &name, double lat, double lon)
 {
-  if (node < 0 || node >= (int) nodes.size()) {
-    throw runtime_error("add_building: node index out of range");
-  }
-  nodes[node].buildings.push_back(building);
+  Building b;
+
+  if (name.empty()) throw runtime_error("add_building: building has no name");
+  if (!(lat >= -90 && lat <= 90)) throw runtime_error("add_building: bad latitude");
+  if (!(lon >= -180 && lon <= 180)) throw runtime_error("add_building: bad longitude");
+
+  b.name = name;
+  b.lat = lat;
+  b.lon = lon;
+  buildings.push_back(b);
 }
 
 void Graph::read(istream &in)
 {
   string line, type, extra;
-  string s_id, s_to, s_lat, s_lon, s_len, s_cap, s_ff;
+  string s_id, s_to, s_lat, s_lon, s_len, s_cap, s_ff, s_mode;
   long long id, to_id_num;
   double lat, lon, length, capacity, free_flow;
   int line_num, from, to;
-  size_t hash;
+  bool car, walk;
 
   line_num = 0;
   while (getline(in, line)) {
     line_num++;
 
-    hash = line.find('#');
-    if (hash != string::npos) line.erase(hash);
-
     istringstream ss(line);
     if (!(ss >> type)) continue;   // blank line
+    if (type[0] == '#') continue;  // comment line
 
     // AI helped here
     if (type == "NODE") {
@@ -159,8 +181,8 @@ void Graph::read(istream &in)
       add_node(id, lat, lon);
 
     } else if (type == "EDGE") {
-      if (!(ss >> s_id >> s_to >> s_len >> s_cap >> s_ff)) {
-        bad_line(line_num, "EDGE needs: from to length capacity free_flow [name]");
+      if (!(ss >> s_id >> s_to >> s_len >> s_cap >> s_ff >> s_mode)) {
+        bad_line(line_num, "EDGE needs: from to length capacity free_flow mode [name]");
       }
       if (!to_id(s_id, id)) bad_line(line_num, "bad node id \"" + s_id + "\"");
       if (!to_id(s_to, to_id_num)) bad_line(line_num, "bad node id \"" + s_to + "\"");
@@ -172,22 +194,43 @@ void Graph::read(istream &in)
       if (!to_double(s_len, length) || !(length > 0)) {
         bad_line(line_num, "bad length \"" + s_len + "\" (must be > 0)");
       }
-      if (!to_double(s_cap, capacity) || !(capacity > 0)) {
-        bad_line(line_num, "bad capacity \"" + s_cap + "\" (must be > 0)");
+      if (s_mode == "C") {
+        car = true;  walk = false;
+      } else if (s_mode == "W") {
+        car = false; walk = true;
+      } else if (s_mode == "CW") {
+        car = true;  walk = true;
+      } else {
+        bad_line(line_num, "bad mode \"" + s_mode + "\" (must be C, W or CW)");
       }
-      if (!to_double(s_ff, free_flow) || !(free_flow > 0)) {
-        bad_line(line_num, "bad free flow time \"" + s_ff + "\" (must be > 0)");
+      if (car) {
+        if (!to_double(s_cap, capacity) || !(capacity > 0)) {
+          bad_line(line_num, "bad capacity \"" + s_cap + "\" (must be > 0 on a car edge)");
+        }
+        if (!to_double(s_ff, free_flow) || !(free_flow > 0)) {
+          bad_line(line_num, "bad free flow time \"" + s_ff + "\" (must be > 0 on a car edge)");
+        }
+      } else {
+        if (!to_double(s_cap, capacity) || capacity != 0) {
+          bad_line(line_num, "bad capacity \"" + s_cap + "\" (must be 0 on a walk-only edge)");
+        }
+        if (!to_double(s_ff, free_flow) || free_flow != 0) {
+          bad_line(line_num, "bad free flow time \"" + s_ff + "\" (must be 0 on a walk-only edge)");
+        }
       }
-      add_edge(from, to, length, capacity, free_flow, rest_of_line(ss));
+      add_edge(from, to, length, capacity, free_flow, car, walk, rest_of_line(ss));
 
     } else if (type == "BUILDING") {
-      if (!(ss >> s_id)) bad_line(line_num, "BUILDING needs: node_id name");
-      if (!to_id(s_id, id)) bad_line(line_num, "bad node id \"" + s_id + "\"");
-      from = find_node(id);
-      if (from == -1) bad_line(line_num, "building uses unknown node " + s_id);
+      if (!(ss >> s_lat >> s_lon)) bad_line(line_num, "BUILDING needs: lat lon name");
+      if (!to_double(s_lat, lat) || !(lat >= -90 && lat <= 90)) {
+        bad_line(line_num, "bad latitude \"" + s_lat + "\"");
+      }
+      if (!to_double(s_lon, lon) || !(lon >= -180 && lon <= 180)) {
+        bad_line(line_num, "bad longitude \"" + s_lon + "\"");
+      }
       extra = rest_of_line(ss);
       if (extra.empty()) bad_line(line_num, "BUILDING is missing a name");
-      add_building(from, extra);
+      add_building(extra, lat, lon);
 
     } else {
       bad_line(line_num, "unknown line type \"" + type + "\"");
@@ -217,16 +260,23 @@ void Graph::print() const
     n = &nodes[i];
     printf("Node %lld (%.5f, %.5f)\n", n->id, n->lat, n->lon);
 
-    for (j = 0; j < n->buildings.size(); j++) {
-      printf("  building: %s\n", n->buildings[j].c_str());
-    }
-
     if (n->adj.empty()) printf("  (no outgoing edges)\n");
     for (j = 0; j < n->adj.size(); j++) {
       e = &n->adj[j];
-      printf("  -> %-6lld %-24s %7.1f m  cap %6.0f/hr  free flow %5.1f s  v/c %.2f\n",
-             nodes[e->to].id, e->name.empty() ? "(unnamed)" : e->name.c_str(),
-             e->length, e->capacity, e->free_flow, e->congestion());
+      printf("  -> %-11lld %-2s %-24s %7.1f m", nodes[e->to].id,
+             e->car ? (e->walk ? "CW" : "C") : "W",
+             e->name.empty() ? "(unnamed)" : e->name.c_str(), e->length);
+      if (e->car) {
+        printf("  cap %6.0f/hr  free flow %5.1f s  v/c %.2f",
+               e->capacity, e->free_flow, e->congestion());
+      }
+      printf("\n");
     }
+  }
+
+  if (!buildings.empty()) printf("\nBuildings:\n");
+  for (i = 0; i < buildings.size(); i++) {
+    printf("  %-30s (%.5f, %.5f)\n", buildings[i].name.c_str(),
+           buildings[i].lat, buildings[i].lon);
   }
 }

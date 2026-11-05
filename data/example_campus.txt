@@ -1,0 +1,162 @@
+# Example campus-style graph for testing routing (Dijkstra) before the real
+# UTK graph is ready. Made-up layout and names, not real campus data, but it
+# uses every feature of the real file: big OSM-style node ids, car + walk
+# edges (CW), walk-only paths (W), a one-way road, unnamed paths, buildings
+# as separate points (not tied to nodes), a building whose nearest node only
+# has walk edges, and a # inside a building name.
+#
+# Format (see src/graph.cpp):
+#   NODE id lat lon
+#   EDGE from_id to_id length_m capacity_veh_per_hr free_flow_s mode [name]
+#   BUILDING lat lon name
+# mode: C = cars only, W = walkers only, CW = both. W edges have capacity 0
+# and free_flow 0. Every EDGE line is one direction.
+#
+# Layout. Letters are only for these comments; the file uses the ids:
+#   A 9000000001   B 9000000002   C 9000000003   D 9000000004
+#   E 9000000005   F 9000000006   G 9000000007   H 9000000008
+#   I 9000000009   J 9000000010   K 9000000011   L 9000000012
+#   M 9000000013
+#
+#     A ---- B ------- C ----- D          North Drive (top)
+#     |      ^         :       |
+#     |      ^ Middle  : Ped.  |          ^ = Middle Lane, one-way north
+#     |      ^ Lane    : Mall  |              for cars (J -> F -> B)
+#     |      ^         :       |          : = walk-only path
+#     E ---- F ....... G ..M.. H          E-F = Cross Street
+#     |      ^         :       |          G-M-H = unnamed footways
+#     |      ^         : Steps |          G-K = Library Steps
+#     I ---- J ------- K ----- L          South Avenue (bottom)
+#  West Street                East Street
+#
+# Speeds: North Drive, East Street, Middle Lane 25 mph; South Avenue 35 mph;
+# West Street and Cross Street 20 mph. Lengths are real distances between
+# the coordinates (haversine), free_flow = length / speed.
+#
+# Expected answers. Car searches use free_flow (seconds) as the weight,
+# walking searches use length (meters). Each answer is the unique best path
+# (no ties).
+#
+#   Car, I to B:
+#       I -> J -> F -> B
+#       9000000009 9000000010 9000000006 9000000002
+#       30.2 s
+#   Car, I to B, avoiding Middle Lane:
+#       I -> E -> A -> B
+#       9000000009 9000000005 9000000001 9000000002
+#       36.3 s
+#   Car, B to J (Middle Lane is one-way the wrong way):
+#       B -> A -> E -> I -> J
+#       9000000002 9000000001 9000000005 9000000009 9000000010
+#       45.9 s
+#   Walk, B to J (walkers can use Middle Lane southbound):
+#       B -> F -> J
+#       9000000002 9000000006 9000000010
+#       230.8 m
+#   Walk, B to M:
+#       B -> F -> G -> M
+#       9000000002 9000000006 9000000007 9000000013
+#       348.7 m
+#   Car, I to M (M only has walk edges):
+#       no path
+#   Walk, J to C (cuts across on the footway and Pedestrian Mall):
+#       J -> F -> G -> C
+#       9000000010 9000000006 9000000007 9000000003
+#       371.0 m
+#   Car, J to C (same trip by car):
+#       J -> F -> B -> C
+#       9000000010 9000000006 9000000002 9000000003
+#       35.8 s
+#   Walk, E to H (unnamed footways through M):
+#       E -> F -> G -> M -> H
+#       9000000005 9000000006 9000000007 9000000013 9000000008
+#       458.2 m
+#
+# Buildings and their nearest nodes (straight-line distance). A car trip
+# should start/end at the nearest node that has a car edge:
+#
+#   Student Union      nearest node B (32 m), nearest car node B (32 m)
+#   Stadium            nearest node I (57 m), nearest car node I (57 m)
+#   Engineering Hall   nearest node K (43 m), nearest car node K (43 m)
+#   Parking Garage #2  nearest node K (45 m), nearest car node K (45 m)
+#   Library            nearest node M (22 m), nearest car node C (64 m)
+#   Art Museum         nearest node H (32 m), nearest car node H (32 m)
+#
+# Map data: made up for testing.
+
+NODE 9000000001 35.9549785 -83.9300000
+NODE 9000000002 35.9550684 -83.9285558
+NODE 9000000003 35.9550235 -83.9266671
+NODE 9000000004 35.9549785 -83.9253340
+NODE 9000000005 35.9539893 -83.9300000
+NODE 9000000006 35.9540342 -83.9284447
+NODE 9000000007 35.9540792 -83.9267782
+NODE 9000000008 35.9539443 -83.9253340
+NODE 9000000009 35.9530000 -83.9300000
+NODE 9000000010 35.9530000 -83.9283336
+NODE 9000000011 35.9529550 -83.9265560
+NODE 9000000012 35.9530000 -83.9253340
+NODE 9000000013 35.9544839 -83.9260005
+
+# North Drive
+EDGE 9000000001 9000000002 130.4 800 11.7 CW North Drive
+EDGE 9000000002 9000000001 130.4 800 11.7 CW North Drive
+EDGE 9000000002 9000000003 170.1 800 15.2 CW North Drive
+EDGE 9000000003 9000000002 170.1 800 15.2 CW North Drive
+EDGE 9000000003 9000000004 120.1 800 10.7 CW North Drive
+EDGE 9000000004 9000000003 120.1 800 10.7 CW North Drive
+
+# South Avenue
+EDGE 9000000009 9000000010 150.0 1600 9.6 CW South Avenue
+EDGE 9000000010 9000000009 150.0 1600 9.6 CW South Avenue
+EDGE 9000000010 9000000011 160.1 1600 10.2 CW South Avenue
+EDGE 9000000011 9000000010 160.1 1600 10.2 CW South Avenue
+EDGE 9000000011 9000000012 110.1 1600 7.0 CW South Avenue
+EDGE 9000000012 9000000011 110.1 1600 7.0 CW South Avenue
+
+# West Street
+EDGE 9000000001 9000000005 110.0 600 12.3 CW West Street
+EDGE 9000000005 9000000001 110.0 600 12.3 CW West Street
+EDGE 9000000005 9000000009 110.0 600 12.3 CW West Street
+EDGE 9000000009 9000000005 110.0 600 12.3 CW West Street
+
+# East Street
+EDGE 9000000004 9000000008 115.0 600 10.3 CW East Street
+EDGE 9000000008 9000000004 115.0 600 10.3 CW East Street
+EDGE 9000000008 9000000012 105.0 600 9.4 CW East Street
+EDGE 9000000012 9000000008 105.0 600 9.4 CW East Street
+
+# Middle Lane
+EDGE 9000000010 9000000006 115.4 500 10.3 CW Middle Lane
+EDGE 9000000006 9000000010 115.4 0 0 W Middle Lane
+EDGE 9000000006 9000000002 115.4 500 10.3 CW Middle Lane
+EDGE 9000000002 9000000006 115.4 0 0 W Middle Lane
+
+# Cross Street
+EDGE 9000000005 9000000006 140.1 400 15.7 CW Cross Street
+EDGE 9000000006 9000000005 140.1 400 15.7 CW Cross Street
+
+# unnamed footways
+EDGE 9000000006 9000000007 150.1 0 0 W
+EDGE 9000000007 9000000006 150.1 0 0 W
+
+# Pedestrian Mall
+EDGE 9000000007 9000000003 105.5 0 0 W Pedestrian Mall
+EDGE 9000000003 9000000007 105.5 0 0 W Pedestrian Mall
+
+# Library Steps
+EDGE 9000000007 9000000011 126.6 0 0 W Library Steps
+EDGE 9000000011 9000000007 126.6 0 0 W Library Steps
+
+# unnamed footways
+EDGE 9000000007 9000000013 83.2 0 0 W
+EDGE 9000000013 9000000007 83.2 0 0 W
+EDGE 9000000013 9000000008 84.8 0 0 W
+EDGE 9000000008 9000000013 84.8 0 0 W
+
+BUILDING 35.9553562 -83.9285558 Student Union
+BUILDING 35.9526852 -83.9304999 Stadium
+BUILDING 35.9526403 -83.9262783 Engineering Hall
+BUILDING 35.9526223 -83.9268338 Parking Garage #2
+BUILDING 35.9546637 -83.9261116 Library
+BUILDING 35.9539713 -83.9249785 Art Museum
