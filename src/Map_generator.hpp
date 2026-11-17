@@ -9,9 +9,10 @@ public:
     long long id; // Node name
     double latitude;// coordinates
     double longitude;
+    vector <Edge> edges;//all the edges leaving the node
 };
 
-class Edges {
+class Edge {
 public:
     long long id; // pathway name
     long long from; // current node
@@ -24,10 +25,18 @@ public:
     
 };
 
+class Building {
+    string name;
+    long long latitude; 
+    long long longitude;
+
+};
+
 class Map {
 public:
-    unordered_map<long long, Node> nodes; 
-    unordered_map<long long, Edges> ways;
+    unordered_map<long long, Node> nodes; // keyed by id,  value = node itself 
+    unordered_map<long long, Edge> ways;
+    unordered_map <long long, Building> buildings;
 
     void osm_convert (string &filename);// function reads the osm file and creates a txt file to process
     void LoadMap (string &filename); // function reads the text file from OSM_convert and creates our map
