@@ -25,6 +25,8 @@ public:
     double volume; 
     bool mode; //true = car and walk false = just walk
     string name; // name of the road
+    bool car;
+    bool walk;
 };
 
 class Building {

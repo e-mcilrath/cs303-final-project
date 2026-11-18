@@ -7,16 +7,16 @@ using namespace std;
 void data_structure::LoadMap(string &filename)
 {
 
-    string line, first, direction ,name, CW;
+    string line, first, direction1,direction2 ,name, CW;
     ifstream fin(filename); // open the file
-    long long id, lat, lon, from, to;
-    double length, capacity, free_flow; 
+    long long id,  from, to;
+    double lat, lon,length, capacity, free_flow; 
      
     Node node;
     Edge edge;
     Building building;
 
-    while (getline(cin, line))
+    while (getline(fin, line))
     {
         istringstream ss(line);
 
@@ -38,12 +38,13 @@ void data_structure::LoadMap(string &filename)
 
             // insert into the map
             nodes.push_back(node);
+            index_map.insert(make_pair(id, nodes.size()-1)); //nodes.size()-1 == current nodes index in the vector
         }
 
         else if (first == "EDGE")
         { // repeat the same process we did for nodes
             //from_id to_id length_m capacity_veh_per_hr free_flow_s mode [name]
-            ss >> from >> to >> length >> capacity >> free_flow >> CW >> direction >> name;
+            ss >> from >> to >> length >> capacity >> free_flow >> CW >> direction1 >> direction2 >> name;
 
             edge.from = index_map.find(from) -> second;
             edge.to = index_map.find(to) -> second; 
@@ -68,6 +69,7 @@ void data_structure::LoadMap(string &filename)
             //TODO read in the name
             name = direction + name;
             edge.name = name; 
+            nodes[edge.from].edges.push_back(edge);
 
 
            
