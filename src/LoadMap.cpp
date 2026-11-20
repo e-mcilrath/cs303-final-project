@@ -7,10 +7,10 @@ using namespace std;
 void data_structure::LoadMap(string &filename)
 {
 
-    string line, first, direction ,name, CW;
+    string line, first, name, CW;
     ifstream fin(filename); // open the file
-    long long id, lat, lon, from, to;
-    double length, capacity, free_flow; 
+    long long id, from, to;
+    double lat, lon, length, capacity, free_flow; // lat/lon have decimals, so double
      
     Node node;
     Edge edge;
@@ -20,7 +20,10 @@ void data_structure::LoadMap(string &filename)
     {
         istringstream ss(line);
 
-        ss >> first;
+        // skip blank lines. Without this, first keeps the last line's type
+        // and the last node or edge gets added again
+        if (!(ss >> first))
+            continue;
 
         if (first == "#")
             continue; // ignoring unnessesary lines
@@ -43,13 +46,14 @@ void data_structure::LoadMap(string &filename)
         else if (first == "EDGE")
         { // repeat the same process we did for nodes
             //from_id to_id length_m capacity_veh_per_hr free_flow_s mode [name]
-            ss >> from >> to >> length >> capacity >> free_flow >> CW >> direction >> name;
+            ss >> from >> to >> length >> capacity >> free_flow >> CW;
 
             edge.from = index_map.find(from) -> second;
             edge.to = index_map.find(to) -> second; 
             edge.length = length; 
             edge.capacity = capacity; 
             edge.free_flow = free_flow;
+            edge.volume = 0; // no traffic until the traffic simulation sets it
             
             //determine if the path is driveable or walkable
             if(CW.size() == 2) {
@@ -65,9 +69,11 @@ void data_structure::LoadMap(string &filename)
                 edge.walk = false;
             }
 
-            //TODO read in the name
-            name = direction + name;
-            edge.name = name; 
+            // the name is the rest of the line and can have spaces.
+            // clear it first so an unnamed edge doesn't keep the last name
+            name.clear();
+            getline(ss >> ws, name);
+            edge.name = name;
 
 
            
@@ -76,11 +82,15 @@ void data_structure::LoadMap(string &filename)
         else if (first == "BUILDING")
         { // repeat the same process we did for nodes
             //lat lon name
-            ss >> lat >> lon >> direction >> name; 
+            ss >> lat >> lon;
 
-            building.latitude = lat; 
+            // the name is the rest of the line and can have spaces
+            name.clear();
+            getline(ss >> ws, name);
+
+            building.latitude = lat;
             building.longitude = lon;
-            building.name = direction + name; //TODO read in the name properly
+            building.name = name;
             
 
 

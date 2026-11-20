@@ -479,7 +479,7 @@ static void write_graph(ostream &out, const OutGraph &g, const OsmData &osm)
 {
   (void) out; (void) g; (void) osm;
 }
-
+// TODO: prints out the numbre of NODES and EDGES and BUILDINGS
 /* ------------------------------------------------------------------ */
 
 int main(int argc, char **argv)
