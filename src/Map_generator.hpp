@@ -52,6 +52,7 @@ struct Settings {
 class data_structure {
 public:
 
+    vector<Edge> path;
     vector < Node > nodes;
     vector < Building > buildings;
     map <long long, int> index_map;
