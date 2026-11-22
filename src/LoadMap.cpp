@@ -16,7 +16,7 @@ void data_structure::LoadMap(string &filename)
     Edge edge;
     Building building;
 
-    while (getline(cin, line))
+    while (getline(fin, line))
     {
         istringstream ss(line);
 
@@ -41,6 +41,7 @@ void data_structure::LoadMap(string &filename)
 
             // insert into the map
             nodes.push_back(node);
+            index_map.insert(make_pair(id, nodes.size()-1)); //nodes.size()-1 == current nodes index in the vector
         }
 
         else if (first == "EDGE")
@@ -48,8 +49,9 @@ void data_structure::LoadMap(string &filename)
             //from_id to_id length_m capacity_veh_per_hr free_flow_s mode [name]
             ss >> from >> to >> length >> capacity >> free_flow >> CW;
 
-            edge.from = index_map.find(from) -> second;
-            edge.to = index_map.find(to) -> second; 
+
+            edge.from = index_map.find(from) -> second; //find the index for the from node
+            edge.to = index_map.find(to) -> second;  // find the index it goes to
             edge.length = length; 
             edge.capacity = capacity; 
             edge.free_flow = free_flow;
@@ -75,6 +77,8 @@ void data_structure::LoadMap(string &filename)
             getline(ss >> ws, name);
             edge.name = name;
 
+            nodes[edge.from].edges.push_back(edge);
+
 
            
         }
@@ -91,6 +95,8 @@ void data_structure::LoadMap(string &filename)
             building.latitude = lat;
             building.longitude = lon;
             building.name = name;
+
+            buildings.push_back(building);
             
 
 
