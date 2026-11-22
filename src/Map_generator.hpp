@@ -16,7 +16,7 @@ public:
     double length; // length of the edge
     double capacity;  // how much cars it can support
     double free_flow; // how long it takes for a car
-    double volume;
+    double volume; // actual flow
     bool car;  // cars may use this edge
     bool walk; // people may walk this edge
     string name; // name of the road
