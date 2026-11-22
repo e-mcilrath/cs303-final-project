@@ -4,15 +4,6 @@
 #include <string>
 using namespace std;
 
-class Node {
-public:
-    long long id; // Node name
-    double latitude;// coordinates
-    double longitude;
-    vector <Edge> edges;//all the edges leaving the node
-     
-};
-
 class Edge {
 public:
 
@@ -29,17 +20,29 @@ public:
     bool walk;
 };
 
+class Node {
+public:
+    long long id; // Node name
+    double latitude;// coordinates
+    double longitude;
+    vector <Edge> edges;//all the edges leaving the node
+     
+};
+
+
+
 class Building {
     public:
         string name;
-        long long latitude; 
-        long long longitude;
+        double latitude; 
+        double longitude;
 
 };
 
 class data_structure {
 public:
 
+    vector<Edge> path;
     vector < Node > nodes;
     vector < Building > buildings;
     map <long long, int> index_map;
@@ -49,5 +52,8 @@ public:
     void LoadMap (string &filename); // function reads the text file from OSM_convert and creates our map
     void shortest_path (long long node_1, long long node_2 ); // This function will run a dijkstras algorithim that will find the shortest path between two nodes
     double  calc_weight(Edge, string CW);
+
+
+    void PrintMap() const; //TELL ERIC TO ADD To FINAL HPP
 
 };

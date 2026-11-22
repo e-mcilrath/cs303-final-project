@@ -7,7 +7,7 @@ using namespace std;
 void data_structure::LoadMap(string &filename)
 {
 
-    string line, first, direction1,direction2 ,name, CW;
+    string line, first, direction ,name, CW;
     ifstream fin(filename); // open the file
     long long id,  from, to;
     double lat, lon,length, capacity, free_flow; 
@@ -20,7 +20,7 @@ void data_structure::LoadMap(string &filename)
     {
         istringstream ss(line);
 
-        ss >> first;
+        if(!(ss >> first)) continue;
 
         if (first == "#")
             continue; // ignoring unnessesary lines
@@ -44,10 +44,11 @@ void data_structure::LoadMap(string &filename)
         else if (first == "EDGE")
         { // repeat the same process we did for nodes
             //from_id to_id length_m capacity_veh_per_hr free_flow_s mode [name]
-            ss >> from >> to >> length >> capacity >> free_flow >> CW >> direction1 >> direction2 >> name;
+            ss >> from >> to >> length >> capacity >> free_flow >> CW;
 
-            edge.from = index_map.find(from) -> second;
-            edge.to = index_map.find(to) -> second; 
+
+            edge.from = index_map.find(from) -> second; //find the index for the from node
+            edge.to = index_map.find(to) -> second;  // find the index it goes to
             edge.length = length; 
             edge.capacity = capacity; 
             edge.free_flow = free_flow;
@@ -66,9 +67,10 @@ void data_structure::LoadMap(string &filename)
                 edge.walk = false;
             }
 
-            //TODO read in the name
-            name = direction + name;
-            edge.name = name; 
+            // read in the name
+            edge.name.clear();
+            getline(ss >> ws, edge.name);
+
             nodes[edge.from].edges.push_back(edge);
 
 
@@ -78,11 +80,13 @@ void data_structure::LoadMap(string &filename)
         else if (first == "BUILDING")
         { // repeat the same process we did for nodes
             //lat lon name
-            ss >> lat >> lon >> direction >> name; 
+            ss >> lat >> lon ; 
 
             building.latitude = lat; 
             building.longitude = lon;
-            building.name = direction + name; //TODO read in the name properly
+            getline(ss >> ws, building.name);; 
+
+            buildings.push_back(building);
             
 
 
