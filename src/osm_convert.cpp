@@ -9,7 +9,7 @@ campus, with both roads and walkways.
 usage: osm_convert map.osm [graph-file]
 
 With no graph-file the graph goes to standard output, so this works:
-  ./bin/osm_convert data/map.osm > data/utk.txt
+  ./bin/osm_convert data/map.osm > data/map.txt
 Progress and the check summary always go to standard error.
 
 The skeleton and its direction comments were drafted with AI help, and the
