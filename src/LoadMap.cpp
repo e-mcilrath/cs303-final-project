@@ -7,10 +7,10 @@ using namespace std;
 void data_structure::LoadMap(string &filename)
 {
 
-    string line, first, direction ,name, CW;
+    string line, first, name, CW;
     ifstream fin(filename); // open the file
-    long long id,  from, to;
-    double lat, lon,length, capacity, free_flow; 
+    long long id, from, to;
+    double lat, lon, length, capacity, free_flow; // lat/lon have decimals, so double
      
     Node node;
     Edge edge;
@@ -20,7 +20,10 @@ void data_structure::LoadMap(string &filename)
     {
         istringstream ss(line);
 
-        if(!(ss >> first)) continue;
+        // skip blank lines. Without this, first keeps the last line's type
+        // and the last node or edge gets added again
+        if (!(ss >> first))
+            continue;
 
         if (first == "#")
             continue; // ignoring unnessesary lines
@@ -52,6 +55,7 @@ void data_structure::LoadMap(string &filename)
             edge.length = length; 
             edge.capacity = capacity; 
             edge.free_flow = free_flow;
+            edge.volume = 0; // no traffic until the traffic simulation sets it
             
             //determine if the path is driveable or walkable
             if(CW.size() == 2) {
@@ -67,9 +71,11 @@ void data_structure::LoadMap(string &filename)
                 edge.walk = false;
             }
 
-            // read in the name
-            edge.name.clear();
-            getline(ss >> ws, edge.name);
+            // the name is the rest of the line and can have spaces.
+            // clear it first so an unnamed edge doesn't keep the last name
+            name.clear();
+            getline(ss >> ws, name);
+            edge.name = name;
 
             nodes[edge.from].edges.push_back(edge);
 
@@ -80,11 +86,15 @@ void data_structure::LoadMap(string &filename)
         else if (first == "BUILDING")
         { // repeat the same process we did for nodes
             //lat lon name
-            ss >> lat >> lon ; 
+            ss >> lat >> lon;
 
-            building.latitude = lat; 
+            // the name is the rest of the line and can have spaces
+            name.clear();
+            getline(ss >> ws, name);
+
+            building.latitude = lat;
             building.longitude = lon;
-            getline(ss >> ws, building.name);; 
+            building.name = name;
 
             buildings.push_back(building);
             

@@ -81,8 +81,6 @@ void data_structure::shortest_path(long long node_1, long long node_2)
             path.push_back(parents[current]); //push back current index
             current = parents[current].from;
 
-
-
         }
     }
 }
